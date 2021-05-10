@@ -7,4 +7,5 @@
 3. 执行器 Executor
 4. JDBC处理器 StatementHandler
 
-![20210510212731](../img/20210510212731.png)
+![Mybatis执行过程](../img/20210510212731.png)
+![测试](http://mybatis.github.io/images/mybatis-logo.png)
