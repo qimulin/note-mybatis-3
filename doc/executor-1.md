@@ -8,4 +8,3 @@
 4. JDBC处理器 StatementHandler
 
 ![Mybatis执行过程](../img/20210510212731.png)
-![测试](http://mybatis.github.io/images/mybatis-logo.png)
