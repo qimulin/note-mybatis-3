@@ -23,7 +23,7 @@ Essentials
 * [Download Snapshot](https://oss.sonatype.org/content/repositories/snapshots/org/mybatis/mybatis/)
 
 # 源码阅读
-> 注意：存于项目中的相关文件似乎都存于https://raw.githubusercontent.com中，需要FQ，则图片可正常显示
+> 注意：存于项目中的相关文件似乎都存于https://raw.githubusercontent.com 中，需要FQ，则图片可正常显示
 ## [Mybatis执行器1](doc/executor-1.md)
 - [SimpleExecutor 简单执行器](src/main/java/org/apache/ibatis/executor/SimpleExecutor.java)：每次都会创建一个新的预处理器
 - [ReuseExecutor 可重用执行器](src/main/java/org/apache/ibatis/executor/ReuseExecutor.java)：相同的SQL只进行一次预处理
