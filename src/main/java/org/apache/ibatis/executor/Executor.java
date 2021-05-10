@@ -28,6 +28,10 @@ import org.apache.ibatis.session.RowBounds;
 import org.apache.ibatis.transaction.Transaction;
 
 /**
+ * 对于增、删、改、查而言，Executor只提供了改和查，在标准的jdbc里面其实就是只有改和查，增、删、改都可以算作是改
+ * 上面提到的改和查，就涉及到缓存，如果缓存中有数据，就可以去缓存中查找；改的时候，数据发生变更，那么缓存中的数据也要发生变更
+ * 所以Executor[ɪɡˈzekjətər]还涉及到一个功能，就是维护缓存
+ * 辅助API还有提交、关闭执行器、批处理刷新（flushStatements()）
  * @author Clinton Begin
  */
 public interface Executor {

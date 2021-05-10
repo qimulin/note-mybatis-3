@@ -32,6 +32,8 @@ import org.apache.ibatis.session.RowBounds;
 import org.apache.ibatis.transaction.Transaction;
 
 /**
+ * 简单执行器：Executor的默认实现
+ * 特点：无论SQL是否一样，每次都会进行预编译；但是如果SQL一样，每次都预编译，就会很耗性能，此时我们就可以用可重用的执行器{@link ReuseExecutor}
  * @author Clinton Begin
  */
 public class SimpleExecutor extends BaseExecutor {

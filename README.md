@@ -21,3 +21,10 @@ Essentials
 * [See the docs](http://mybatis.github.io/mybatis-3)
 * [Download Latest](https://github.com/mybatis/mybatis-3/releases)
 * [Download Snapshot](https://oss.sonatype.org/content/repositories/snapshots/org/mybatis/mybatis/)
+
+# 源码阅读
+## [Mybatis执行器1](doc/executor-1.md)
+- [SimpleExecutor 简单执行器](src/main/java/org/apache/ibatis/executor/SimpleExecutor.java)：每次都会创建一个新的预处理器
+- [ReuseExecutor 可重用执行器](src/main/java/org/apache/ibatis/executor/ReuseExecutor.java)：相同的SQL只进行一次预处理
+- [BatchExecutor 批处理执行器](src/main/java/org/apache/ibatis/executor/BatchExecutor.java)：批处理提交修改，必须执行flushStatements才会生效
+ 

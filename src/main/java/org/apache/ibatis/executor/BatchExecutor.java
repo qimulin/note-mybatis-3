@@ -36,6 +36,8 @@ import org.apache.ibatis.session.RowBounds;
 import org.apache.ibatis.transaction.Transaction;
 
 /**
+ * 批处理执行器，比如我要执行大量的修改操作，10000次修改，如果每个一次次执行，也非常浪费性能。此时可以进行个批处理，先执行100次，再执行100次之类的
+ * 此处理器若光论查询的话，与{@link SimpleExecutor} 无差别，主要差别在增、删、改（只会编译一次，然后一起执行）
  * @author Jeff Butler
  */
 public class BatchExecutor extends BaseExecutor {
@@ -51,6 +53,9 @@ public class BatchExecutor extends BaseExecutor {
     super(configuration, transaction);
   }
 
+  /**
+   * 注意，该方法最后也只是在设置参数，并未真正执行出去，若要生效，则需调用{@link #flushStatements(boolean)} 方法
+   * */
   @Override
   public int doUpdate(MappedStatement ms, Object parameterObject) throws SQLException {
     final Configuration configuration = ms.getConfiguration();
@@ -108,6 +113,9 @@ public class BatchExecutor extends BaseExecutor {
     return cursor;
   }
 
+  /**
+   * 批处理刷新
+   * */
   @Override
   public List<BatchResult> doFlushStatements(boolean isRollback) throws SQLException {
     try {

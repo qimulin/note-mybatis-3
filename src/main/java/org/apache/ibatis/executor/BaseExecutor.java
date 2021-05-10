@@ -271,6 +271,13 @@ public abstract class BaseExecutor implements Executor {
 
   protected abstract List<BatchResult> doFlushStatements(boolean isRollback) throws SQLException;
 
+  /**
+   * @param ms Sql声明映射
+   * @param parameter 参数
+   * @param rowBounds 行范围
+   * @param resultHandler 结果处理器
+   * @param boundSql 动态sql语句
+   * */
   protected abstract <E> List<E> doQuery(MappedStatement ms, Object parameter, RowBounds rowBounds, ResultHandler resultHandler, BoundSql boundSql)
       throws SQLException;
 

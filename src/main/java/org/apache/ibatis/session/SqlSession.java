@@ -24,6 +24,8 @@ import org.apache.ibatis.cursor.Cursor;
 import org.apache.ibatis.executor.BatchResult;
 
 /**
+ * 采用门面模式，提供接口，包括基本API（增、删、改、查）、辅助API（提交、关闭会话）等
+ * 这里只提供接口，具体的实现在实现类里面，并且实现类里面通常调用具体的执行器Executor执行
  * The primary Java interface for working with MyBatis.
  * Through this interface you can execute commands, get mappers and manage transactions.
  *
