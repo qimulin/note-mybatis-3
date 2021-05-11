@@ -24,8 +24,5 @@ Essentials
 
 # 源码阅读
 > 注意：存于项目中的相关文件似乎都存于https://raw.githubusercontent.com 中，需要FQ，则图片可正常显示
-## [Mybatis执行器1](doc/executor-1.md)
-- [SimpleExecutor 简单执行器](src/main/java/org/apache/ibatis/executor/SimpleExecutor.java)：每次都会创建一个新的预处理器
-- [ReuseExecutor 可重用执行器](src/main/java/org/apache/ibatis/executor/ReuseExecutor.java)：相同的SQL只进行一次预处理
-- [BatchExecutor 批处理执行器](src/main/java/org/apache/ibatis/executor/BatchExecutor.java)：批处理提交修改，必须执行flushStatements才会生效
- 
+## [Mybatis执行器](doc/executor.md)
+

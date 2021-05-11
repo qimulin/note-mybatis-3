@@ -45,6 +45,11 @@ import org.apache.ibatis.transaction.Transaction;
 import org.apache.ibatis.type.TypeHandlerRegistry;
 
 /**
+ * 基础执行器，实现Executor：主要用以实现 获取连接和一级缓存处理
+ * 主要实现query和update方法，并留出分别留出引子doQuery和doUpdate给子类去实现
+ * 这样就可以在query和update方法里面对缓存进行处理，
+ * {@link #query(MappedStatement, Object, RowBounds, ResultHandler)}里对缓存进行查询，
+ * {@link #update(MappedStatement, Object)}里对缓存进行清理
  * @author Clinton Begin
  */
 public abstract class BaseExecutor implements Executor {
@@ -132,6 +137,7 @@ public abstract class BaseExecutor implements Executor {
   @Override
   public <E> List<E> query(MappedStatement ms, Object parameter, RowBounds rowBounds, ResultHandler resultHandler) throws SQLException {
     BoundSql boundSql = ms.getBoundSql(parameter);
+    // 根据后面这些参数创建一个缓存的Key
     CacheKey key = createCacheKey(ms, parameter, rowBounds, boundSql);
     return query(ms, parameter, rowBounds, resultHandler, key, boundSql);
   }
@@ -149,10 +155,13 @@ public abstract class BaseExecutor implements Executor {
     List<E> list;
     try {
       queryStack++;
+      // 从本地一级缓存里进行查找
       list = resultHandler == null ? (List<E>) localCache.getObject(key) : null;
       if (list != null) {
+        // 依靠本地缓存去执行相关逻辑
         handleLocallyCachedOutputParameters(ms, key, parameter, boundSql);
       } else {
+        // 缓存里没有，去调用数据库查询
         list = queryFromDatabase(ms, parameter, rowBounds, resultHandler, key, boundSql);
       }
     } finally {
