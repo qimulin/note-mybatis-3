@@ -6,6 +6,7 @@
 2. SQL会话 SqlSession
 3. 执行器 Executor
 4. JDBC处理器 StatementHandler
+
 ![Mybatis执行过程](../img/20210510212731.png)
 
 ## Mybatis Executor
