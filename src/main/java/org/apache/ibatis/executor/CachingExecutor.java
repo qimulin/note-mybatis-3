@@ -33,6 +33,11 @@ import org.apache.ibatis.session.RowBounds;
 import org.apache.ibatis.transaction.Transaction;
 
 /**
+ * 本执行器只专注于实现二级缓存相关的逻辑，
+ * 原来的那些获取连接，查询数据库，采用了一个装饰者模式，用delegate【美[ˈdelɪɡət , ˈdelɪɡeɪt] 授权，代表】属性，该属性指向下一个Executor
+ * 也就是说CachingExecutor逻辑执行完，则会交给装饰的delegate执行器去执行
+ * 装饰者模式：在不改变原有类结构和继承的情况下，通过包装原对象去扩展一个新功能
+ * 注意：二级缓存需要调用{@link #commit(boolean)} 参数true，才会保存到缓存中
  * @author Clinton Begin
  * @author Eduardo Macarron
  */
@@ -40,7 +45,9 @@ public class CachingExecutor implements Executor {
 
   private final Executor delegate;
   private final TransactionalCacheManager tcm = new TransactionalCacheManager();
-
+  /**
+   * 相当于是为delegate添加一层二级缓存处理的装饰
+   * */
   public CachingExecutor(Executor delegate) {
     this.delegate = delegate;
     delegate.setExecutorWrapper(this);
@@ -94,13 +101,18 @@ public class CachingExecutor implements Executor {
       throws SQLException {
     Cache cache = ms.getCache();
     if (cache != null) {
+      // 查询前按需要情况二级缓存
       flushCacheIfRequired(ms);
+      // MappedStatement使用缓存，并且resultHandler需要为null，即不能对结果集进行自定义处理
       if (ms.isUseCache() && resultHandler == null) {
         ensureNoOutParams(ms, boundSql);
+        // 先走二级缓存查询：从缓存事务管理器获取缓存
         @SuppressWarnings("unchecked")
         List<E> list = (List<E>) tcm.getObject(cache, key);
         if (list == null) {
+          // 查不到，再走一级缓存
           list = delegate.query(ms, parameterObject, rowBounds, resultHandler, key, boundSql);
+          // 查到的结果，填充到二级缓存上来
           tcm.putObject(cache, key, list); // issue #578 and #116
         }
         return list;
@@ -114,12 +126,18 @@ public class CachingExecutor implements Executor {
     return delegate.flushStatements();
   }
 
+  /**
+   * 直接交给下装饰执行器
+   * */
   @Override
   public void commit(boolean required) throws SQLException {
     delegate.commit(required);
     tcm.commit();
   }
 
+  /**
+   * 直接交给下装饰执行器，只有和二级缓存相关的时候才会加上操作
+   * */
   @Override
   public void rollback(boolean required) throws SQLException {
     try {

@@ -26,9 +26,28 @@
 >里进行实现的）就可以用到缓存
 
 所以Mybatis中执行器整体的层级结构就变成了如下图所示：
- ![Mybatis执行器层级结构图](../img/20210511214721.png)
+ ![Mybatis执行器层级结构图1](../img/20210511214721.png)
 
 ## 缓存执行器CacheExecutor
-那么Mybatis又是如何实现二级缓存的呢？
- 
- 
+那么Mybatis又是如何实现二级缓存的呢？<br>
+就是用的[CachingExecutor 缓存执行器](../src/main/java/org/apache/ibatis/executor/CachingExecutor.java)。那么，结构图便变成：
+![Mybatis执行器层级结构图2](../img/20210513213546.png)
+
+## SqlSession会话
+那实际使用中，我们一般不会直接去用执行器，而通常会用[SqlSession](../src/main/java/org/apache/ibatis/session/SqlSession.java)进行操作，
+SqlSession的作用就是降低调用的复杂性。我们关注下该接口的默认实现[DefaultSqlSession](../src/main/java/org/apache/ibatis/session/defaults/DefaultSqlSession.java)。
+ 使用示例：
+ ```
+Sqlsession sqlSession = factory.openSession(true)
+// 具体根据需要调用SqlSession对象中的方法
+……
+```
+直接使用SqlSession，调试的时候会发现，SqlSession中的executor属性默认为CachingExecutor，而CachingExecutor里的delegate默认就是SimpleExecutor。如下图所示：
+![SqlSession的使用调试](../img/20210513214746.png)
+那么如果具体的BaseExecutor类型我不想使用默认的SimpleExecutor，那要如何进行修改呢？[SqlSessionFactory](../src/main/java/org/apache/ibatis/session/SqlSessionFactory.java)
+提供了很多openSession的重载方法，例如可以指定具体的BaseExecutor类型，如下所示：
+```
+Sqlsession sqlSession = factory.openSession(ExecutorType.REUSE, true)
+// 具体根据需要调用SqlSession对象中的方法
+……
+```
