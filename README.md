@@ -24,5 +24,6 @@ Essentials
 
 # 源码阅读
 > 注意：存于项目中的相关文件似乎都存于https://raw.githubusercontent.com 中，需要FQ，则图片可正常显示
-## [Mybatis执行器](doc/executor.md)
+- [Mybatis执行器](doc/executor.md)
+- [一级缓存](doc/level1-cache.md)
 

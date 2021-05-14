@@ -27,7 +27,9 @@ import org.apache.ibatis.cache.CacheException;
 public class PerpetualCache implements Cache {
 
   private final String id;
-
+  /**
+   * 所以一级缓存对应的就是HashMap
+   * */
   private final Map<Object, Object> cache = new HashMap<>();
 
   public PerpetualCache(String id) {

@@ -118,6 +118,7 @@ public abstract class BaseExecutor implements Executor {
     if (closed) {
       throw new ExecutorException("Executor was closed.");
     }
+    // 无论update里面是什么内容，都会执行情况本地缓存的操作
     clearLocalCache();
     return doUpdate(ms, parameter);
   }
@@ -149,7 +150,10 @@ public abstract class BaseExecutor implements Executor {
     if (closed) {
       throw new ExecutorException("Executor was closed.");
     }
+    // queryStack是拿来实现嵌套查询的，如果里面还有子查询的话，就会变成2,3,4等
+    // ms.isFlushCacheRequired()对应flushCache=true
     if (queryStack == 0 && ms.isFlushCacheRequired()) {
+      // queryStack>0 不执行清空，说明嵌套子查询不会清空本地缓存，只有一层查询加上设置了flushCache=true才会清空一级缓存
       clearLocalCache();
     }
     List<E> list;
@@ -173,6 +177,8 @@ public abstract class BaseExecutor implements Executor {
       }
       // issue #601
       deferredLoads.clear();
+      // 缓存作用域设置成STATEMENT也会清空一级缓存，同样的queryStack == 0也限制了清空缓存不能发生在自查询里面
+      // 子查询依赖了一级缓存，所以不能被清空
       if (configuration.getLocalCacheScope() == LocalCacheScope.STATEMENT) {
         // issue #482
         clearLocalCache();
@@ -205,10 +211,15 @@ public abstract class BaseExecutor implements Executor {
     if (closed) {
       throw new ExecutorException("Executor was closed.");
     }
+    /* 里面主要包含6个属性 */
     CacheKey cacheKey = new CacheKey();
+    // 1-StatementID
     cacheKey.update(ms.getId());
+    // 2-分页的offset
     cacheKey.update(rowBounds.getOffset());
+    // 3-分页的limit
     cacheKey.update(rowBounds.getLimit());
+    // 4-sql
     cacheKey.update(boundSql.getSql());
     List<ParameterMapping> parameterMappings = boundSql.getParameterMappings();
     TypeHandlerRegistry typeHandlerRegistry = ms.getConfiguration().getTypeHandlerRegistry();
@@ -227,11 +238,13 @@ public abstract class BaseExecutor implements Executor {
           MetaObject metaObject = configuration.newMetaObject(parameterObject);
           value = metaObject.getValue(propertyName);
         }
+        // 5-参数
         cacheKey.update(value);
       }
     }
     if (configuration.getEnvironment() != null) {
       // issue #176
+      // 6-环境
       cacheKey.update(configuration.getEnvironment().getId());
     }
     return cacheKey;
@@ -336,12 +349,14 @@ public abstract class BaseExecutor implements Executor {
 
   private <E> List<E> queryFromDatabase(MappedStatement ms, Object parameter, RowBounds rowBounds, ResultHandler resultHandler, CacheKey key, BoundSql boundSql) throws SQLException {
     List<E> list;
+    // EXECUTION_PLACEHOLDER 用于解决子查询中的循环依赖
     localCache.putObject(key, EXECUTION_PLACEHOLDER);
     try {
       list = doQuery(ms, parameter, rowBounds, resultHandler, boundSql);
     } finally {
       localCache.removeObject(key);
     }
+    // 将查询结果赋到缓存中
     localCache.putObject(key, list);
     if (ms.getStatementType() == StatementType.CALLABLE) {
       localOutputParameterCache.putObject(key, parameter);
