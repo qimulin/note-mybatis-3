@@ -16,6 +16,7 @@
 
 ## 源码流程
 ![一级缓存执行流程](../img/20210514215003.png)
+
 结合上图，对[BaseExecutor](../src/main/java/org/apache/ibatis/executor/BaseExecutor.java)的query方法参考注释进行阅读。
 
 
