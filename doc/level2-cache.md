@@ -30,8 +30,46 @@
 ### 序列化
 跨线程，两个对象之间不能完全一样，如果完全一样很容易导致数据的混乱。
 
-### 等等
+### 其他等等
 主要的就是上面提到的几点，当然还有其他一些需求，后面具体看源码再说。
 
+## Mybatis如何实现缓存
+首先，它有一个顶层接口[Cache](../src/main/java/org/apache/ibatis/cache/Cache.java)，方法十分简单。
 
+那么Mybatis又是怎么实现上述提到的需求的呢？这里采用装饰器+责任链的设计模式。
+![Mybatis的缓存实现主要组件](../img/20210519222238.png)
+- SynchronizedCache：对应线程安全
+- LoggingCache：对应命中率统计
+- SerializedCache：对应做序列化的
+- LRU Cache：对应防溢出，LRU为默认的溢出淘汰策略
+- ScheduledCache：对应过期清理（需要设置上才会被使用，默认不过期）
+- BlockingCache：防穿透，防止缓存穿透的，比较复杂
+- Perpetual：内存清理，默认用内存存储，底层实现其实是就是HashMap
 
+如上图，从左到右，每一个缓存都通过装饰器的模式指向下一个缓存，所以缓存的功能会挨个根据不同的功能组件做不同的处理，这就是所谓的责任链。
+
+示例代码
+```
+Cache cache = configuration.getCache({具体的id});
+User user = Mock.newUser();
+cache.putObject("test", user);
+cache.getObject("test");
+```
+无论是putObject方法还是getObject方法，它都会沿着上面图的链条往下进行。
+## 二级缓存使用缓存与命中场景
+### 二级缓存命中条件
+- 运行时参数相关
+    1. 会话提交后（session.commit 自解：前提条件，数据才能设置进缓存去；session.close也会设置缓存；）
+    2. Sql语句，参数相同
+    3. 相同的statementID
+    4. RowBounds相同
+    
+除了第1点，基本上条件和一级缓存一样。
+
+| 二级缓存配置表|   | 
+|-------- | --------|
+| CacheEnabled | 全局缓存开关 默认true |
+| useCache | statement缓存开关 默认true  |
+| flushCache | 清除默认：修改true；查询false  |
+| <cache/>或@CacheNameSpace | 声明缓存空间 |
+| <cache-ref/>或@CacheNameSpaceRef | 引用缓存空间
