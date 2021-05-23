@@ -73,3 +73,26 @@ cache.getObject("test");
 | flushCache | 清除默认：修改true；查询false  |
 | <cache/>或@CacheNameSpace | 声明缓存空间 |
 | <cache-ref/>或@CacheNameSpaceRef | 引用缓存空间
+
+## 二级缓存结构
+那为什么二级缓存需要在会话提交后才能生效呢？原因就在于这个缓存是跨线程使用的，也就是多个会话同时使用。为了防止出现脏读之类的问题。
+![二级缓存结构](../img/20210523193258.png)
+
+如上图，为二级缓存结构，每个会话有其对应的事务缓存管理器，然后由事务缓存管理器去管理里面的暂存空间（有几个Mapper就对应几个暂存区CacheNamespace）。
+接着暂存区指向缓存区（二级缓存空间），所以每暂存区和缓存区的比例是n：1，但是对于单个会话而言，则是1:1。
+
+接下来根据Mybatis的SqlSession代码结构看下二级缓存的结构：
+![二级缓存代码结构](../img/20210523194729.png)
+
+如图，二级缓存CacheExecutor指向一个（类型为[TransactionalCacheManager](../src/main/java/org/apache/ibatis/cache/TransactionalCacheManager.java)的）tcm属性，即事务缓存管理器。然后tcm里面有个transactionalCaches
+（一个HashMap），里面就是记录多个暂存区和缓存区的映射。从结构上可以看出，key为缓存区，value为[TransactionalCache](../src/main/java/org/apache/ibatis/cache/decorators/TransactionalCache.java)缓冲区（暂存区），
+但是value里面有个代理对象，其实就是代理了这个缓存区（SynchronizedCache）。由此可见会话、执行器、事务缓存管理器之间都是1：1：1的这么一个关系，也可以直接说会话和事务缓存管理器
+就是1:1的关系。每个事务管理器里面又会存在多个暂存区（具体多少个取决于用到多少个缓存）。真正在做查询数据的时候，是要先把数据放到暂存区中，
+当提交（commit）之后，它才会把数据从暂存区提到缓存区中。而上图责任链结构开始的SynchronizedCache对应的其实就是我们的缓存区。
+## 二级缓存的存取流程
+下面来看二级缓存的执行流程：
+![二级缓存执行流程](../img/20210523203620.png)
+
+由上图可见，这里的未命中缓存的查询方法和修改方法都只是在操作暂存区，而且修改update方法并不是去更新缓存，而且是去flushCache清空缓存。所以
+只有在commit之后才能提供到二级缓存空间。而暂存区的四个操作setObject、getObject、clearLocalCache和commit则主要都是在TransactionCache
+类代码中体现的。

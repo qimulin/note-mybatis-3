@@ -24,7 +24,7 @@ import org.apache.ibatis.cache.decorators.TransactionalCache;
  * @author Clinton Begin
  */
 public class TransactionalCacheManager {
-
+  /** Cache（缓存定义对象）作为暂存区的key */
   private final Map<Cache, TransactionalCache> transactionalCaches = new HashMap<>();
 
   public void clear(Cache cache) {

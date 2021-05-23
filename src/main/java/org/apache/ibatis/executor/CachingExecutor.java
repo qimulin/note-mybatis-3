@@ -79,6 +79,7 @@ public class CachingExecutor implements Executor {
 
   @Override
   public int update(MappedStatement ms, Object parameterObject) throws SQLException {
+    // 所以其实可以通过设置flushCacheRequired=false控制修改操作不清空暂存区
     flushCacheIfRequired(ms);
     return delegate.update(ms, parameterObject);
   }
@@ -99,20 +100,22 @@ public class CachingExecutor implements Executor {
   @Override
   public <E> List<E> query(MappedStatement ms, Object parameterObject, RowBounds rowBounds, ResultHandler resultHandler, CacheKey key, BoundSql boundSql)
       throws SQLException {
+    // 获取Cache根据两个参数相关，一个是是否配置了全局的缓存开关；第二个是是否有声明缓存空间
+    // 如果声明了，则cache是不会等于null
     Cache cache = ms.getCache();
     if (cache != null) {
-      // 查询前按需要情况二级缓存
+      // 查询前按需要清空二级缓存
       flushCacheIfRequired(ms);
       // MappedStatement使用缓存，并且resultHandler需要为null，即不能对结果集进行自定义处理
       if (ms.isUseCache() && resultHandler == null) {
         ensureNoOutParams(ms, boundSql);
-        // 先走二级缓存查询：从缓存事务管理器获取缓存
+        // 先走二级缓存查询：从缓存事务管理器获取缓存，这里之所以要传cache参数，是因为事务缓存管理器中会有许多暂存区，所以需要传入对应的缓存定义对象，才能找到对应的缓存
         @SuppressWarnings("unchecked")
         List<E> list = (List<E>) tcm.getObject(cache, key);
         if (list == null) {
           // 查不到，再走一级缓存
           list = delegate.query(ms, parameterObject, rowBounds, resultHandler, key, boundSql);
-          // 查到的结果，填充到二级缓存上来
+          // 查到的结果，填充到二级缓存暂存区，只有调commit方法后才会真正提交到二级缓存空间
           tcm.putObject(cache, key, list); // issue #578 and #116
         }
         return list;
@@ -181,7 +184,9 @@ public class CachingExecutor implements Executor {
 
   private void flushCacheIfRequired(MappedStatement ms) {
     Cache cache = ms.getCache();
+    // 如果缓存不为null，且MappedStatement配置了flushCacheRequired=true
     if (cache != null && ms.isFlushCacheRequired()) {
+      // 此处的情况只是情况暂存区，因为我们可以看到tcm对象类型是TransactionalCacheManager
       tcm.clear(cache);
     }
   }
