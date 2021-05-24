@@ -98,6 +98,10 @@ public abstract class BaseStatementHandler implements StatementHandler {
     }
   }
 
+  /**
+   * 抽象方法：实例化Statement
+   * 设计很像{@link org.apache.ibatis.executor.BaseExecutor#doQuery(MappedStatement, Object, RowBounds, ResultHandler, BoundSql)}
+   * */
   protected abstract Statement instantiateStatement(Connection connection) throws SQLException;
 
   protected void setStatementTimeout(Statement stmt, Integer transactionTimeout) throws SQLException {

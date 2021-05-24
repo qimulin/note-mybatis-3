@@ -77,6 +77,7 @@ public class PreparedStatementHandler extends BaseStatementHandler {
     String sql = boundSql.getSql();
     if (mappedStatement.getKeyGenerator() instanceof Jdbc3KeyGenerator) {
       String[] keyColumnNames = mappedStatement.getKeyColumns();
+      // 由Connection实例化预处理的Statement
       if (keyColumnNames == null) {
         return connection.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS);
       } else {
