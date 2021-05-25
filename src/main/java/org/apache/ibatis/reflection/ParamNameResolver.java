@@ -108,6 +108,7 @@ public class ParamNameResolver {
   }
 
   /**
+   * 通过传一个对象数组参数，转换成一个Object参数
    * <p>
    * A single non-special parameter is returned without a name.
    * Multiple parameters are named using the naming rule.
@@ -122,18 +123,25 @@ public class ParamNameResolver {
   public Object getNamedParams(Object[] args) {
     final int paramCount = names.size();
     if (args == null || paramCount == 0) {
+      // 若没有参数，或者参数个数为0
       return null;
     } else if (!hasParamAnnotation && paramCount == 1) {
+      // 如果没有@Param注解，而且参数个数为1，那么直接返回
       Object value = args[names.firstKey()];
       return wrapToMapIfCollection(value, useActualParamName ? names.get(0) : null);
     } else {
+      // 有加@Param注解，或者参数个数>1
       final Map<String, Object> param = new ParamMap<>();
       int i = 0;
+      // names原先会因反射，得到方法参，arg0，arg1……之类的，如果有注解@Param("firstParam")之类的代替arg0，那么就显示未"firstParam"了
       for (Map.Entry<Integer, String> entry : names.entrySet()) {
+        // 往param放入名称和参数值
         param.put(entry.getValue(), args[entry.getKey()]);
         // add generic param names (param1, param2, ...)
+        // 添加生成命名为（param1，param2，...）之类的参数
         final String genericParamName = GENERIC_NAME_PREFIX + (i + 1);
         // ensure not to overwrite parameter named with @Param
+        // 保证不会重写被@Parem注解命名的参数，即names里面不存在param1，param2……之类的
         if (!names.containsValue(genericParamName)) {
           param.put(genericParamName, args[entry.getKey()]);
         }

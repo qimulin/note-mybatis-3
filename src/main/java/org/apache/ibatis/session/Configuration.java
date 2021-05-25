@@ -654,7 +654,13 @@ public class Configuration {
     return resultSetHandler;
   }
 
+  /**
+   * 为什么通过Configuration（大管家）来创建这些StatementHandler、ResultSetHandler、ParameterHandler之类的组件呢？
+   * 一是为了统一（简单工厂）
+   * 二是需要对这些对象进行统一的插件拦截
+   * */
   public StatementHandler newStatementHandler(Executor executor, MappedStatement mappedStatement, Object parameterObject, RowBounds rowBounds, ResultHandler resultHandler, BoundSql boundSql) {
+    // 可以看下RoutingStatementHandler
     StatementHandler statementHandler = new RoutingStatementHandler(executor, mappedStatement, parameterObject, rowBounds, resultHandler, boundSql);
     statementHandler = (StatementHandler) interceptorChain.pluginAll(statementHandler);
     return statementHandler;

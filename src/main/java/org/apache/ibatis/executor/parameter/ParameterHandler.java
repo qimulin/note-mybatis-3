@@ -19,8 +19,9 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
 /**
+ * 该接口目前只有一个实现 {@link org.apache.ibatis.scripting.defaults.DefaultParameterHandler}
  * A parameter handler sets the parameters of the {@code PreparedStatement}.
- *
+ * 看注释：一个给PrepareStatement设置参数的参数处理器
  * @author Clinton Begin
  */
 public interface ParameterHandler {

@@ -39,6 +39,7 @@ import org.apache.ibatis.session.RowBounds;
 import org.apache.ibatis.session.SqlSession;
 
 /**
+ * 用来处理Mapper和会话SqlSession的动态代理
  * @author Clinton Begin
  * @author Eduardo Macarron
  * @author Lasse Voss
@@ -83,6 +84,7 @@ public class MapperMethod {
         } else if (method.returnsCursor()) {
           result = executeForCursor(sqlSession, args);
         } else {
+          // 如果不是上面的那些情况，走下列代码
           Object param = method.convertArgsToSqlCommandParam(args);
           result = sqlSession.selectOne(command.getName(), param);
           if (method.returnsOptional()
@@ -305,7 +307,11 @@ public class MapperMethod {
       this.paramNameResolver = new ParamNameResolver(configuration, method);
     }
 
+    /**
+     * 转换参数到Sql命令参数
+     * */
     public Object convertArgsToSqlCommandParam(Object[] args) {
+      // 直接调用ParamNameResolver.getNamedParams方法
       return paramNameResolver.getNamedParams(args);
     }
 
