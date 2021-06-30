@@ -28,11 +28,10 @@ Statement（爷爷）——>PreparedStatement（父亲）——>CallableStatemen
 - 第二条线设置参数（其中Parameter会将Java对象转成JDBC需要的参数形式）
 - 第三条线执行并处理结果（其中ResultSet会将结果集转成对应的JavaBean，最为复杂）
 详见代码[PreparedStatementHandler](../src/main/java/org/apache/ibatis/executor/statement/PreparedStatementHandler.java)
-PrepareStatementHandler
+
 ## 参数转换
 ![参数处理](../img/20210525225639.png)
-
-用ParamNameResolver进行参数转换：
+用ParamNameResolver进行参数转换（此步骤会发生在进入Executor之前，最终会作为Object parameter参数传入Executor的方法中）：
 1. 单个参数
     1. 默认不做任何处理，除非设置了@param
 2. 多个参数（转换成Map）
@@ -42,3 +41,23 @@ PrepareStatementHandler
 > 注：关于反射获取变量名，只有jdk1.8以后 并且添加了-parameters编译参数才可以。但不建议这么做，一旦编译的时候没加这个参数，
 > 就会导致业务逻辑都会出现错误，编译的场所会有很多，可能在我本机，可能在Jenkins或者在一些第三方的编译服务器上，在这过程中若任何一个地方忘记
 > 加上该参数，就会导致业务逻辑出错。
+
+## 参数映射
+![参数映射](../img/20210531231200.png)
+ParameterHandler
+1. 单个原始类型
+    - 直接映射，忽略SQL中引用名称
+2. Map类型
+    - Map key进行映射
+3. Object
+    - 基于属性名称进行映射，支持嵌套对象属性访问（类似school.class.student）
+
+参考上述[StatementHandler执行流程](#StatementHandler执行流程)图，可以看到设置参数是第二条线，由Executor开始，到PreparedStatementHandler，
+再到ParameterHandler。以SimpleExecutor举例，可以看到：
+
+SimpleExecutor.doQuery <br>
+——> prepareStatement(handler, ms.getStatementLog()) <br>
+——> handler.parameterize(stmt); <br>
+——> ParameterHandler.setParameters(PreparedStatement ps)
+
+![调试截图](../img/20210531225321.png)
