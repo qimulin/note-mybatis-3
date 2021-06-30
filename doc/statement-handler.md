@@ -31,13 +31,14 @@ Statement（爷爷）——>PreparedStatement（父亲）——>CallableStatemen
 PrepareStatementHandler
 ## 参数转换
 ![参数处理](../img/20210525225639.png)
+
 用ParamNameResolver进行参数转换：
 1. 单个参数
     1. 默认不做任何处理，除非设置了@param
 2. 多个参数（转换成Map）
     1. 转换成param1、param2
     2. 基于@Param中的name属性转换
-    3. 基于反射转换成变量名，如果不支持转换成arg0，arg1
+    3. 基于反射转换成变量名，如果不支持则转换成arg0，arg1
 > 注：关于反射获取变量名，只有jdk1.8以后 并且添加了-parameters编译参数才可以。但不建议这么做，一旦编译的时候没加这个参数，
 > 就会导致业务逻辑都会出现错误，编译的场所会有很多，可能在我本机，可能在Jenkins或者在一些第三方的编译服务器上，在这过程中若任何一个地方忘记
 > 加上该参数，就会导致业务逻辑出错。
